@@ -1,0 +1,14 @@
+{
+  "name": "vue-ssr",
+  "version": "1.0.0",
+  "description": "vue SSR lesson",
+  "main": "index.js",
+  "author": "yanglong",
+  "license": "MIT",
+  "dependencies": {
+    "@koa/router": "^9.4.0",
+    "koa": "^2.13.0",
+    "vue": "^2.6.12",
+    "vue-server-renderer": "^2.6.12"
+  }
+}
