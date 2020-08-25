@@ -88,6 +88,20 @@ public/index.html 中添加 注释占位符，使用模板替换注释标签。
 <!--vue-ssr-outlet-->
 ```
 
+// server.js  从 index.html 中读取模板，将 new Vue 创建的 dom 渲染至 `<!--vue-ssr-outlet-->` 中
+
+```js
+const template = fs.readFileSync('./public/index.html', 'utf8');
+router.get('/', async (ctx) => {
+  const res = await render
+    .createRenderer({
+      template,
+    })
+    .renderToString(vm);
+  ctx.body = res
+});
+```
+
 
 
 ## 配置工程化的 SSR 项目
