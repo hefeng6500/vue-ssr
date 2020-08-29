@@ -621,7 +621,7 @@ export default {
 防止刷新页面不存在
 
 ```js
-router.get("*", async ctx => {
+router.get("/(.*)", async ctx => {
   ctx.body = await new Promise((resolve, reject) => {
     render.renderToString({ url: ctx.url }, (err, html) => {
       // 必须写成回调函数的方式否则样式不生效
