@@ -6,11 +6,11 @@ Vue.use(Vuex);
 export default () => {
   let store = new Vuex.Store({
     state: {
-      username: 'song',
+      username: 'jack',
     },
     mutations: {
       changeName(state) {
-        state.username = 'hello';
+        state.username = 'rose';
       },
     },
     actions: {
@@ -24,5 +24,10 @@ export default () => {
       },
     },
   });
+
+  // if (typeof window !== 'undefined' && window.__INITIAL_STATE__) {
+  //   store.replaceState(window.__INITIAL_STATE__)
+  // }
+
   return store;
 };

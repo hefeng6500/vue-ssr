@@ -32,10 +32,7 @@ module.exports = {
         use: [
           'vue-style-loader',
           {
-            loader: 'css-loader',
-            options: {
-              esModule: true,
-            },
+            loader: 'css-loader'
           },
         ],
       },

@@ -666,31 +666,38 @@ render.renderToString({ url: ctx.url }, (err, html) => {
 // store.js
 import Vue from 'vue';
 import Vuex from 'vuex';
+
 Vue.use(Vuex);
 
-export default ()=>{
-    let store = new Vuex.Store({
-        state:{
-            username:'song'
-        },
-        mutations:{
-            changeName(state){
-                state.username = 'hello';
-            }
-        },
-        actions:{
-            changeName({commit}){
-                return new Promise((resolve,reject)=>{
-                    setTimeout(() => {
-                        commit('changeName');
-                        resolve();
-                    }, 1000);
-                })
-            }
-        }
-    });
-    return store
-}
+export default () => {
+  let store = new Vuex.Store({
+    state: {
+      username: 'jack',
+    },
+    mutations: {
+      changeName(state) {
+        state.username = 'rose';
+      },
+    },
+    actions: {
+      changeName({ commit }) {
+        return new Promise((resolve, reject) => {
+          setTimeout(() => {
+            commit('changeName');
+            resolve();
+          }, 1000);
+        });
+      },
+    },
+  });
+
+  if (typeof window !== 'undefined' && window.__INITIAL_STATE__) {
+    store.replaceState(window.__INITIAL_STATE__)
+  }
+
+  return store;
+};
+
 ```
 
 ```js
@@ -711,26 +718,40 @@ export default ()=>{
 
 ```js
 // entry-server.js
-import createApp from './main';
-export default (context)=>{
-    return new Promise((resolve)=>{
-        let {app,router,store} = createApp();
-        router.push(context.url); // 默认访问到/a就跳转到/a
-        router.onReady(()=>{
-            let matchComponents = router.getMatchedComponents(); // 获取路由匹配到的组件
-            
-            Promise.all(matchComponents.map(component=>{
-                if(component.asyncData){
-                    return component.asyncData(store);
-                }
-            })).then(()=>{
-                context.state = store.state; // 将store挂载在window.__INITIAL_STATE__
-                resolve(app);
+import createApp from './app';
 
-            });
-        })
-    })
-}
+export default (context) => {
+  return new Promise((resolve, reject) => {
+    const { app, router, store } = createApp();
+    router.push(context.url); // 默认跳转到路径里，有异步组件
+    router.onReady(() => {
+
+      const matchComponents = router.getMatchedComponents(); // 获取匹配到的组件
+      if (matchComponents.length > 0) { // 匹配到路由了
+        // 调用组件对应的asyncData
+        console.log('matchComponents.length', matchComponents.length)
+        Promise.all(matchComponents.map(component => {
+          // 需要所有的asyncdata方法执行完毕后 才会响应结果
+          console.log('component', component)
+          console.log('component.asyncData', component.asyncData)
+          if (component.methods.asyncData) {
+            // 返回的是promise
+            return component.methods.asyncData(store);
+          }
+        })).then(() => {
+          context.state = store.state;// 将状态放到上下文中
+          console.log(store.state)
+
+          resolve(app)// 每次都是一个新的  只是产生一个实例 服务端根据实例 创建字符串 
+        }, reject)
+
+      } else {
+        reject({ code: 404 });  // 没有匹配到路由
+      }
+    }, reject)
+  });
+};
+
 ```
 
 在浏览器运行时替换store
@@ -756,4 +777,26 @@ export default {
 ```
 
 
+
+当用户访问 /bar 时，浏览器向服务器请求 /bar 的路由，匹配到该组件有一个  asyncData 的方法，然后进行调用，改变了状态仓库的值，并且更新模板，最后返回的模板中带有已经赋值好的 store.state,并且会在 window.\__INITIAL_STATE__ 上挂载 store
+
+
+
+以下是返回的模板实例 
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>index</title>
+<link rel="preload" href="client.bundle.js" as="script"></head>
+<body>
+  <div id="app" data-server-rendered="true"><a href="/" class="router-link-active">foo</a> <a href="/bar" aria-current="page" class="router-link-exact-active router-link-active">bar</a> <div><div>Bar</div> <h1>
+    rose
+  </h1></div></div><script>window.__INITIAL_STATE__={"username":"rose"}</script><script src="client.bundle.js" defer></script>
+</body>
+</html>
+```
 
